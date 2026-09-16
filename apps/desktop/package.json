@@ -1,0 +1,18 @@
+{
+  "name": "@jano/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jano client (Tauri) — local encryption engine, WatermelonDB, UI. See docs/ARCHITECTURE-01.md.",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hash-wasm": "^4.9.0",
+    "@cloudflare/opaque-ts": "latest"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0",
+    "vitest": "^5.0.0"
+  }
+}
