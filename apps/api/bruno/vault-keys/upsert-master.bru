@@ -1,0 +1,30 @@
+meta {
+  name: upsert-master
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/vault-keys
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "purpose": "master",
+    "wrappedDek": "d3JhcHBlZC1kZWstYnl0ZXM=",
+    "keyVersion": 1
+  }
+}
+
+docs {
+  Run this (and upsert-recovery) before sync/push or sync/pull --
+  SyncService's reconciliation gate 404s without a registered master key.
+  wrappedDek is base64 of arbitrary bytes here; a real client sends
+  aes-gcm.ts packSealed() output (see apps/desktop/src/engine).
+}

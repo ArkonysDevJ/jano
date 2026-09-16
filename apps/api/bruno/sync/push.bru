@@ -1,0 +1,36 @@
+meta {
+  name: push
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/sync/push
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "ciphertext": "c3luY2VkLWNpcGhlcnRleHQ=",
+    "dekVersion": 1,
+    "masterKeyVersion": 1
+  }
+}
+
+docs {
+  Requires vault-keys/upsert-master to have run first, with the same
+  keyVersion (1) -- otherwise this 409s (outdated master_key_version) or
+  404s (no master key registered at all).
+
+  With no "itemId", this always creates a new item (never a conflict).
+  To exercise the conflict-fork path (section 14): add "itemId":
+  "{{itemId}}" (from vault-items/create) and "lastSeenItemVersion": 1,
+  push it, then push the SAME body again -- the second push's
+  lastSeenItemVersion (1) is now behind the server's current itemVersion
+  (2), so it forks instead of overwriting.
+}

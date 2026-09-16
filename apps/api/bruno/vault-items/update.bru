@@ -1,0 +1,27 @@
+meta {
+  name: update
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{baseUrl}}/vault/items/{{itemId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "ciphertext": "dXBkYXRlZC1jaXBoZXJ0ZXh0LWJ5dGVz",
+    "dekVersion": 1
+  }
+}
+
+docs {
+  Direct overwrite, no conflict detection -- that's SyncModule's job
+  (section 14). Run vault-items/create first -- it populates {{itemId}}.
+}

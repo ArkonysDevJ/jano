@@ -1,0 +1,43 @@
+meta {
+  name: finish
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/rotate/finish
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "registrationRecord": "<base64 output of a real OpaqueClient.registerFinish() for the NEW password -- see ../README.md>"
+  }
+}
+
+docs {
+  As shipped, this assumes Factor-1-only (no hardened mode) -- the
+  account from opaque-bruno-fixture.mjs's default run qualifies, so this
+  should succeed with just the body above.
+
+  To exercise Factor 2 (hardened mode): the account must have been
+  registered with a continuitySecret (see auth/register-finish's docs),
+  and this body needs a "continuitySignature" field: base64 of
+  HMAC-SHA256(key = that continuitySecret, data = {{continuityChallenge}}
+  from rotation/start). Computing that inside Bruno needs
+  require('crypto') in a pre-request script (supported in recent Bruno
+  versions) -- not wired here by default since this collection has no
+  reason to persist a raw continuitySecret. If your Bruno version's
+  script sandbox doesn't expose require('crypto'), compute the HMAC with
+  a one-off `node -e` command instead and paste the base64 result in by
+  hand.
+
+  Calling this twice with the SAME registrationRecord that already
+  landed is intentionally idempotent (see rotation.service.ts) -- it
+  returns {"rotated": true} again without requiring a fresh challenge.
+}

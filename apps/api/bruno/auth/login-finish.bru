@@ -1,0 +1,26 @@
+meta {
+  name: login-finish
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/auth/login/finish
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "ke3": "<base64 output of a real OpaqueClient.authFinish() -- see ../README.md>",
+    "deviceLabel": "bruno-manual-device"
+  }
+}
+
+docs {
+  Reference only -- run `node apps/api/scripts/opaque-bruno-fixture.mjs`
+  instead (see ../README.md). It prints sessionToken/refreshToken/
+  deviceId/userId ready to paste into the "local" environment -- every
+  other folder in this collection depends on those variables.
+}

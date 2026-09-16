@@ -1,0 +1,28 @@
+meta {
+  name: upsert-recovery
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/vault-keys
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "purpose": "recovery",
+    "wrappedDek": "d3JhcHBlZC1yZWNvdmVyeS1kZWstYnl0ZXM=",
+    "keyVersion": 1
+  }
+}
+
+docs {
+  Independent key_version from "master" (section 3) -- rotating one
+  must never move the other's version.
+}

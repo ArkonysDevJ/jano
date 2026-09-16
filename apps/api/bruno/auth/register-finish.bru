@@ -1,0 +1,30 @@
+meta {
+  name: register-finish
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/auth/register/finish
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "registrationRecord": "<base64 output of a real OpaqueClient.registerFinish() -- see ../README.md>"
+  }
+}
+
+docs {
+  Reference only -- run `node apps/api/scripts/opaque-bruno-fixture.mjs`
+  instead (see ../README.md). It performs register-start AND
+  register-finish for you with real OPAQUE math.
+
+  To opt this account into section 13's hardened mode (Factor 2 on a
+  future rotation/finish call), add a "continuitySecret" field to the
+  body above with any base64 string -- the server stores it as an
+  opaque shared secret (see rotation/rotation.service.ts). Example:
+  "continuitySecret": "c2hhcmVkLXNlY3JldA=="
+}

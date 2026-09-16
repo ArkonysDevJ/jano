@@ -1,0 +1,17 @@
+meta {
+  name: liveness
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+docs {
+  No auth, no dependencies -- if this fails, the server isn't up at all
+  (wrong port, .env missing JWT_SECRET/OPAQUE_* and bootstrap() threw,
+  etc.). Run this first, before anything else in the collection.
+}

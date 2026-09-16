@@ -1,0 +1,34 @@
+meta {
+  name: create
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/vault/items
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "ciphertext": "YXJiaXRyYXJ5LWNpcGhlcnRleHQtYnl0ZXM=",
+    "dekVersion": 1
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("itemId", res.body.id);
+  }
+}
+
+docs {
+  ciphertext is base64 of arbitrary bytes -- the server never inspects
+  vault content (zero-knowledge, section 3), it's an opaque blob either
+  way. Captures the new item's id into {{itemId}} for get/update below.
+}

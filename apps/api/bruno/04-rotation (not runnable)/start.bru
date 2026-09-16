@@ -1,0 +1,54 @@
+meta {
+  name: start
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/rotate/start
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{sessionToken}}
+}
+
+body:json {
+  {
+    "registrationRequest": "<base64 output of a real OpaqueClient.registerInit() for the NEW password -- see ../README.md>"
+  }
+}
+
+script:post-response {
+  if (res.body && res.body.continuityChallenge) {
+    bru.setEnvVar("continuityChallenge", res.body.continuityChallenge);
+  }
+}
+
+docs {
+  RotationAuthGuard accepts sessionToken OR refreshToken -- both work
+  here. registrationRequest needs real OPAQUE client math, same
+  limitation as auth/register-start (see ../README.md) -- this request
+  only documents the shape.
+
+  Before 2026-09-15, sending the placeholder body below as-is crashed
+  with an uncaught 500 ("error deserializing element", several frames
+  deep inside @cloudflare/voprf-ts's Group.deserialize -- an invalid
+  elliptic-curve point). CloudflareOpaqueServerProvider now catches that
+  and every other malformed-registrationRequest failure and returns a
+  clean 400 instead: {"message": "registrationRequest is not
+  well-formed OPAQUE protocol data.", "statusCode": 400}. Still not a
+  usable response -- this request remains reference-only -- just no
+  longer an unhandled server crash.
+
+  opaque-bruno-fixture.mjs (2026-09-14 update) now performs a full
+  rotate/start + rotate/finish round-trip itself, right after
+  login/finish -- run the script for a live, real end-to-end rotation
+  test. This request stays reference-only for inspecting the shape or
+  manually driving a rotation with your own OpaqueClient script.
+
+  continuityChallenge only comes back if this account was registered
+  with a continuitySecret (hardened mode, see auth/register-finish's
+  docs) -- otherwise it's absent and rotation/finish needs no signature.
+}

@@ -1,0 +1,24 @@
+meta {
+  name: register-start
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/auth/register/start
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "registrationRequest": "<base64 output of a real OpaqueClient.registerInit() -- see ../README.md, this needs opaque-bruno-fixture.mjs, not a value typed by hand>"
+  }
+}
+
+docs {
+  Reference only -- run `node apps/api/scripts/opaque-bruno-fixture.mjs`
+  instead (see ../README.md for why). Kept here so the request shape is
+  documented alongside the DTO (auth/dto/register-start.dto.ts).
+}

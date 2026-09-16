@@ -1,0 +1,23 @@
+meta {
+  name: login-start
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/auth/login/start
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "ke1": "<base64 output of a real OpaqueClient.authInit() -- see ../README.md>"
+  }
+}
+
+docs {
+  Reference only -- run `node apps/api/scripts/opaque-bruno-fixture.mjs`
+  instead (see ../README.md).
+}
