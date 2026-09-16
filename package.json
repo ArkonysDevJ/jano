@@ -1,0 +1,16 @@
+{
+  "name": "jano",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first, zero-knowledge password manager — Arkonys Product 2. See docs/ARCHITECTURE-01.md.",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev --workspace=apps/api",
+    "build:api": "npm run build --workspace=apps/api",
+    "start:api": "npm run start:prod --workspace=apps/api",
+    "test:desktop": "npm test --workspace=apps/desktop"
+  }
+}

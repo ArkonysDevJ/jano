@@ -1,0 +1,59 @@
+# Local Postgres for apps/api -- plain postgres:16-alpine, nothing
+# else. Deliberately NOT the full Supabase stack (Auth, PostgREST,
+# Realtime, Storage): Jano already implements its own OPAQUE-based
+# authentication and its own REST layer in NestJS, and the
+# architecture's zero-knowledge/blind-server model would conflict with
+# routing access through a second auth system. This gives apps/api
+# exactly the one thing it needs -- a real Postgres reachable via
+# DATABASE_URL -- and nothing more. See docs/TESTING-01.md for the
+# rest of the environment setup.
+#
+# Usage:
+#   docker compose up -d
+#   docker compose down          # keeps data (named volume)
+#   docker compose down -v       # wipes data too
+#
+# docs/schema.sql is mounted into /docker-entrypoint-initdb.d/, which
+# Postgres's own entrypoint runs ONCE, only when the data directory is
+# empty (a fresh volume). Editing schema.sql after the volume already
+# exists does NOT re-apply it -- `docker compose down -v` and `up -d`
+# again to pick up schema changes during local development, or apply
+# the diff by hand with `psql` once real migrations exist.
+#
+# The credentials below match apps/api/.env.example's DATABASE_URL
+# exactly (postgres://user:password@localhost:55432/jano) -- local dev
+# only, never reused for a real environment.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: jano-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: jano
+    # HOST:CONTAINER -- container-internal port stays the plain
+    # Postgres default (5432), only the HOST-side port is remapped, to
+    # 55432. Found the hard way (2026-09-14): a native Postgres service
+    # already listening on the host's 5432 silently wins the connection
+    # ahead of this container -- same host, same port, two listeners --
+    # and `docker compose ps` still reports this container "healthy"
+    # throughout, so the collision is invisible there. It only shows up
+    # as a confusing `28P01 password authentication failed` from the
+    # app, since it's actually talking to the OTHER Postgres. If your
+    # machine has nothing else on 5432, '5432:5432' works too -- just
+    # keep this value and apps/api/.env.example's DATABASE_URL in sync.
+    ports:
+      - '55432:5432'
+    volumes:
+      - jano-postgres-data:/var/lib/postgresql/data
+      - ./docs/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d jano']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  jano-postgres-data:
