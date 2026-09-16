@@ -1,0 +1,208 @@
+/**
+ * Fase 2 (Tokens Esteticos) -- the first real stylesheet in this
+ * project (Fase 1's closeout audit confirmed zero CSS anywhere in
+ * apps/desktop/src before this file). Applied strictly ON TOP of
+ * already-verified Fase 1 behavior, per the approved checklist's own
+ * framing -- nothing in this file changes what any component DOES,
+ * only how it looks. See docs/TESTING-01.md section 3.5 and the
+ * Fase 2 checklist's section 0 guards this file is written to respect:
+ *
+ * - No change to the `Uint8Array` engine<->UI contract.
+ * - No reintroduction of string persistence in React state.
+ * - No delay to on-blur DOM destruction of a plaintext-credential
+ *   node -- CredentialRevealView.tsx's masked/revealed `<code>`
+ *   password node is unmounted via a plain conditional render
+ *   (`password === null ? ... : ...`), never animated in or out. This
+ *   stylesheet deliberately defines NO `transition`/`animation` on
+ *   `.jano-credential` or its `<code>` child, and must never gain one
+ *   -- a fade-out there would be exactly the kind of delay section 0
+ *   forbids, however small.
+ *
+ * All colors verified against the real WCAG 2.x relative-luminance
+ * formula (sRGB channel linearization, not eyeballed) -- see this
+ * project's own contrast-check script; ratios noted inline below.
+ *
+ * Design decision (approved 2026-09-16): system/native font stacks
+ * only, no Google Fonts or any other CDN-hosted font. Jano's own
+ * posture is local-first with no incidental network calls this app
+ * didn't ask for -- pulling a font from a third-party CDN on every
+ * launch would be exactly that kind of silent request, and isn't
+ * worth it when `ui-sans-serif`/`system-ui` already gives a clean
+ * geometric sans on every platform this app ships to (San Francisco
+ * on macOS, Segoe UI on Windows, the distro default on Linux), and
+ * `ui-monospace` does the same for the monospace stack. Revisit only
+ * if a specific bundled (not CDN) font ever becomes a real product
+ * decision.
+ */
+
+:root {
+  /* --- Palette: zinc/graphite base, WCAG AA verified --- */
+  --color-bg-base: #09090b; /* app background */
+  --color-bg-raised: #121214; /* cards, inputs, anything one step "up" from base */
+  --color-border-default: #27272a; /* structural separation only -- not a contrast-bearing state signal */
+  --color-border-emphasis: #71717a; /* zinc-500 -- 4.12:1 vs base / 3.87:1 vs raised: FAILS the 4.5:1 body-text threshold (never use for text) but clears WCAG 1.4.11's 3:1 non-text/UI-component threshold on both backgrounds -- used only for the copy-confirmation border state, never for text */
+
+  --color-text-primary: #f4f4f5; /* 18.1:1 vs base -- body text, headings */
+  --color-text-secondary: #a1a1aa; /* 7.76:1 vs base / 7.30:1 vs raised -- secondary/status text */
+  --color-text-danger: #f87171; /* 7.19:1 vs base / 6.76:1 vs raised -- error text (role="alert"); paired with role="alert" itself, never color-only */
+
+  /* --- Accent: phosphor green, reserved exclusively for active cryptographic events (see below) --- */
+  --color-accent-phosphor: #10b981; /* 7.84:1 vs base / 7.38:1 vs raised */
+
+  /* --- Typography --- */
+  /* "Swiss geometric sans" for human-facing UI text -- system stack, no CDN (see header comment). */
+  --font-sans:
+    ui-sans-serif, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Monospace EXCLUSIVELY for raw data that crosses the engine's `Uint8Array` contract:
+     revealed credentials, the recovery kit's base64, hashes, UUIDs, key prefixes, timestamps.
+     Never used for ordinary UI prose (labels, buttons, headings, status sentences). */
+  --font-mono:
+    ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --radius-sm: 2px; /* sharp, industrial -- not a rounded consumer-app radius */
+
+  color-scheme: dark;
+}
+
+/* --- Base document --- */
+
+body {
+  margin: 0;
+  background: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* --- Shell layout (App.tsx, UnlockScreen.tsx's <main>) --- */
+
+.jano-shell {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.jano-heading {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 1.25rem;
+  letter-spacing: 0.01em;
+  margin: 0 0 1rem;
+  color: var(--color-text-primary);
+}
+
+.jano-text {
+  color: var(--color-text-secondary);
+  font-family: var(--font-sans);
+}
+
+.jano-field {
+  margin-bottom: 1rem;
+}
+
+.jano-label {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.375rem;
+}
+
+.jano-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  padding: 0.5rem 0.625rem;
+}
+
+.jano-input:disabled {
+  opacity: 0.6;
+}
+
+.jano-button {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.875rem;
+  cursor: pointer;
+}
+
+.jano-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/*
+ * Active-cryptographic-event accent. Applied ONLY via the
+ * `data-crypto-active="true"` attribute components set for the exact
+ * duration of a real KEK derivation (Argon2id) or decrypt call --
+ * never decoratively, never for hover/focus states, never for a
+ * merely-pending or informational state (VaultStatusIndicator's three
+ * states are status text, not an active operation, and deliberately
+ * carry no accent at all -- see VaultStatusIndicator.tsx).
+ */
+.jano-button[data-crypto-active='true'] {
+  border-color: var(--color-accent-phosphor);
+  color: var(--color-accent-phosphor);
+}
+
+.jano-error {
+  color: var(--color-text-danger);
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+}
+
+/* Raw data crossing the Uint8Array contract: recovery kit, revealed credentials. */
+.jano-mono {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--color-text-primary);
+  word-break: break-all;
+}
+
+/* --- Vault status indicator: status text, never accented (see rule above) --- */
+.jano-status {
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.02em;
+}
+
+/*
+ * Credential reveal/copy confirmation. The `data-copy-confirmed`
+ * attribute is CredentialRevealView.tsx's real functional state (see
+ * docs/TESTING-01.md section 3.5) -- this is only the visual layer on
+ * top of it: a border-width step (1px -> 2px) using the non-text-safe
+ * `--color-border-emphasis` token, deliberately NOT the phosphor
+ * accent (copying isn't a cryptographic event) and deliberately no
+ * `transition` (see this file's header comment on section 0).
+ */
+.jano-credential {
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.75rem;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+}
+
+.jano-credential[data-copy-confirmed='true'] {
+  border-width: 2px;
+  border-color: var(--color-border-emphasis);
+  padding: 0.5rem 0.6875rem; /* -0.125rem to offset the border-width step -- avoids reflow/jitter from the box growing */
+}
+
+.jano-credential-confirmation {
+  font-family: var(--font-sans);
+  color: var(--color-text-secondary);
+  font-size: 0.875rem;
+}
