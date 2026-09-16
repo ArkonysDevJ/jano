@@ -9,3 +9,5 @@ export * from './indexeddb-pending-rotation-store';
 export * from './reconnection';
 export * from './opaque-client';
 export * from './vault-item';
+export * from './vault-account-store';
+export * from './indexeddb-vault-account-store';
