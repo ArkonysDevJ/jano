@@ -36,20 +36,30 @@ contra un servidor real en ejecución:
 
 El motor de cifrado de `apps/desktop` (`src/engine/`) cubre derivación
 Argon2id (KEK), envoltura/desenvoltura AES-256-GCM, ciclo de vida
-KEK/DEK (§9), creación de vault (envolturas duales master/recovery), y
-la máquina de estados de rotación offline, agnóstica de storage y de
-red por diseño — ver [`apps/desktop/README.es.md`](apps/desktop/README.es.md).
+KEK/DEK (§9), creación de vault (envolturas duales master/recovery), la
+máquina de estados de rotación offline, y el orquestador de reconexión
+que conecta esa máquina de estados con un servidor OPAQUE real por
+HTTP (con un almacén de rotaciones pendientes respaldado por
+IndexedDB, agnóstico de storage y de red por diseño) — ver
+[`apps/desktop/README.es.md`](apps/desktop/README.es.md).
 
-Suite de pruebas: 43/43 pasando (35 en `apps/api`, 8 en `apps/desktop`,
-incluyendo un round-trip criptográfico OPAQUE real y Argon2id/WebCrypto
-reales — ver la sección 3 de `docs/TESTING-01.md` para el desglose por
-archivo).
+Suite de pruebas: 102/102 pasando (38 en `apps/api`, 64 en `apps/desktop`,
+incluyendo un round-trip criptográfico OPAQUE real, Argon2id/WebCrypto
+reales, un test de integración con un Web Worker real del límite de
+RPC motor↔UI (sección 9), y tests de componente con motor real de la
+pantalla de unlock y de la vista de revelación/copia de credencial
+(Fase 1) — ver la sección 3 de `docs/TESTING-01.md` para el desglose
+por archivo).
 
-Todavía no construido: una base de datos real (la persistencia hoy es
-en memoria), el orquestador de reconexión del desktop que conecta el
-motor con HTTP real, y la actualización a firma asimétrica (Ed25519/P-256)
-para el Factor 2 de rotación, que hoy usa un secreto HMAC compartido,
-documentado explícitamente como provisional.
+Todavía no construido: la actualización a firma asimétrica
+(Ed25519/P-256) para el Factor 2 de rotación, que hoy usa un secreto
+HMAC compartido, documentado explícitamente como provisional
+(pospuesto a propósito para la fase final de hardening); la
+integración de WatermelonDB y el storage real de ítems de bóveda; y la
+Fase 2 (identidad visual, DOCVIS-JANO-01) de la UI de escritorio. La
+Fase 1 (funcional, sin estilo, pantalla de unlock y vista de
+revelación/copia de una sola credencial) y el empaquetado con Tauri ya
+están cerrados — ver la sección 3.4 de `docs/TESTING-01.md`.
 
 ## Estructura
 
@@ -66,8 +76,8 @@ jano/
 
 ## Stack
 
-- Backend: NestJS + Fastify + PostgreSQL (persistencia hoy en memoria,
-  ver `docs/TESTING-01.md`)
+- Backend: NestJS + Fastify + PostgreSQL (persistencia real, ver
+  `docs/TESTING-01.md`)
 - Cliente: Tauri + WatermelonDB
 - Auth: OPAQUE (aPAKE) para sync online, Argon2id para desbloqueo local
   offline — dos planos físicamente distintos, no intercambiables (§4)

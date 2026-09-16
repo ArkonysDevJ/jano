@@ -37,19 +37,28 @@ running server:
 
 `apps/desktop`'s encryption engine (`src/engine/`) covers Argon2id
 derivation (KEK), AES-256-GCM wrapping/unwrapping, KEK/DEK lifecycle
-(section 9), vault creation (dual master/recovery envelopes), and the
-offline rotation state machine, storage- and network-agnostic by
-design -- see [`apps/desktop/README.md`](apps/desktop/README.md).
+(section 9), vault creation (dual master/recovery envelopes), the
+offline rotation state machine, and the reconnection orchestrator that
+wires that state machine to a real OPAQUE server over HTTP (with an
+IndexedDB-backed pending-rotation store, storage- and
+network-agnostic by design) -- see
+[`apps/desktop/README.md`](apps/desktop/README.md).
 
-Test suite: 43/43 passing (35 in `apps/api`, 8 in `apps/desktop`,
-including a real OPAQUE cryptographic round-trip and real
-Argon2id/WebCrypto -- see `docs/TESTING-01.md` section 3 for the
-per-file breakdown).
+Test suite: 102/102 passing (38 in `apps/api`, 64 in `apps/desktop`,
+including a real OPAQUE cryptographic round-trip, real
+Argon2id/WebCrypto, a real-Web-Worker integration test of the
+engine<->UI RPC boundary (section 9), and real-engine component tests
+of the unlock screen and the credential reveal/copy view (Fase 1) --
+see `docs/TESTING-01.md` section 3 for the per-file breakdown).
 
-Not yet built: a real database (persistence is currently in-memory),
-the desktop reconnection orchestrator wiring the engine to real HTTP,
-and the asymmetric (Ed25519/P-256) upgrade for rotation's Factor 2,
-which currently uses a documented-as-provisional shared HMAC secret.
+Not yet built: the asymmetric (Ed25519/P-256) upgrade for rotation's
+Factor 2, which currently uses a documented-as-provisional shared HMAC
+secret (explicitly deferred to the final hardening phase); WatermelonDB
+wiring and real vault-item storage; and Fase 2 (visual identity,
+DOCVIS-JANO-01) for the desktop UI. Fase 1 (functional, unstyled, the
+unlock screen and single-credential reveal/copy view) and the Tauri
+desktop packaging are done and closed -- see
+`docs/TESTING-01.md` section 3.4.
 
 ## Structure
 
@@ -66,8 +75,8 @@ jano/
 
 ## Stack
 
-- Backend: NestJS + Fastify + PostgreSQL (persistence currently
-  in-memory, see `docs/TESTING-01.md`)
+- Backend: NestJS + Fastify + PostgreSQL (real persistence, see
+  `docs/TESTING-01.md`)
 - Client: Tauri + WatermelonDB
 - Auth: OPAQUE (aPAKE) for online sync, Argon2id for local offline
   unlock -- two physically distinct planes, not interchangeable
