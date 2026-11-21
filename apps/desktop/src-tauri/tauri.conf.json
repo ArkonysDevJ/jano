@@ -22,7 +22,7 @@
     "security": {
       "csp": {
         "default-src": "'self' asset:",
-        "connect-src": "https:"
+        "connect-src": "https://PLACEHOLDER-jano-api.up.railway.app"
       }
     }
   },
